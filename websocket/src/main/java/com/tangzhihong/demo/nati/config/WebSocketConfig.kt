@@ -1,4 +1,4 @@
-package com.tangzhihong.demo.config
+package com.tangzhihong.demo.nati.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
