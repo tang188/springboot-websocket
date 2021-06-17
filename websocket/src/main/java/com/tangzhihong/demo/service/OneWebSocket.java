@@ -1,12 +1,15 @@
-package com.tangzhihong.demo.service
+package com.tangzhihong.demo.service;
 
-import lombok.extern.slf4j.Slf4j
-import javax.websocket.server.ServerEndpoint
-import com.tangzhihong.demo.service.OneWebSocket
-import org.springframework.stereotype.Component
-import java.lang.Exception
-import java.util.concurrent.atomic.AtomicInteger
-import javax.websocket.*
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import javax.websocket.*;
+import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author: Malphite
@@ -17,23 +20,32 @@ import javax.websocket.*
 @Slf4j
 @Component
 @ServerEndpoint(value = "/test/one")
-class OneWebSocket {
+public class OneWebSocket {
+
+
+    /**
+     * 记录当前在线连接数
+     */
+    private static AtomicInteger onlineCount = new AtomicInteger(0);
+
+    private static final Map<String, Session> SESSION_MAP = new ConcurrentHashMap<>();
     /**
      * 连接建立成功调用的方法
      */
     @OnOpen
-    fun onOpen(session: Session) {
-        onlineCount.incrementAndGet() // 在线数加1
-        OneWebSocket.log.info("有新连接加入：{}，当前在线人数为：{}", session.id, onlineCount.get())
+    public void onOpen(Session session) {
+        onlineCount.incrementAndGet(); // 在线数加1
+        SESSION_MAP.put(session.getId(), session);
+        log.info("有新连接加入：{}，当前在线人数为：{}", session.getId(), onlineCount.get());
     }
 
     /**
      * 连接关闭调用的方法
      */
     @OnClose
-    fun onClose(session: Session) {
-        onlineCount.decrementAndGet() // 在线数减1
-        OneWebSocket.log.info("有一连接关闭：{}，当前在线人数为：{}", session.id, onlineCount.get())
+    public void onClose(Session session) {
+        onlineCount.decrementAndGet(); // 在线数减1
+        log.info("有一连接关闭：{}，当前在线人数为：{}", session.getId(), onlineCount.get());
     }
 
     /**
@@ -42,34 +54,28 @@ class OneWebSocket {
      * @param message 客户端发送过来的消息
      */
     @OnMessage
-    fun onMessage(message: String, session: Session) {
-        OneWebSocket.log.info("服务端收到客户端[{}]的消息:{}", session.id, message)
-        sendMessage("Hello, $message", session)
+    public void onMessage(String message, Session session) {
+        log.info("服务端收到客户端[{}]的消息:{}", session.getId(), message);
+        this.sendMessage("Hello, " + message, session);
     }
 
     @OnError
-    fun onError(session: Session?, error: Throwable) {
-        OneWebSocket.log.error("发生错误")
-        error.printStackTrace()
+    public void onError(Session session, Throwable error) {
+        log.error("发生错误");
+        error.printStackTrace();
     }
 
     /**
      * 服务端发送消息给客户端
      */
-    private fun sendMessage(message: String, toSession: Session) {
+    private void sendMessage(String message, Session toSession) {
         try {
-            OneWebSocket.log.info("服务端给客户端[{}]发送消息{}", toSession.id, message)
-            toSession.basicRemote.sendText(message)
-        } catch (e: Exception) {
-            OneWebSocket.log.error("服务端发送消息给客户端失败：{}", e)
+            log.info("服务端给客户端[{}]发送消息{}", toSession.getId(), message);
+            toSession.getBasicRemote().sendText(message);
+        } catch (Exception e) {
+            log.error("服务端发送消息给客户端失败：{}", e);
         }
+
     }
 
-    companion object {
-        /**
-         * 记录当前在线连接数
-         */
-        private val onlineCount = AtomicInteger(0)
-        fun test() {}
-    }
 }
