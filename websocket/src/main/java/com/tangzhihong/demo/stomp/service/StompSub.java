@@ -1,7 +1,12 @@
 package com.tangzhihong.demo.stomp.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandler;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author: Malphite
@@ -11,7 +16,16 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
  */
 public class StompSub {
 
-    public void test(){
-        WebSocketStompClient client = new WebSocketStompClient(new SockJsClient());
+
+    @Autowired
+    private WebSocketStompClient stompClient;
+
+    public void test() throws ExecutionException, InterruptedException {
+        StompSessionHandler sessionHandler = new CustmStompSessionHandler();
+
+        StompSession stompSession = stompClient.connect("loggerServerQueueUrl", sessionHandler).get();
+
+        stompSession.send("topic/greetings", "Hello new user");
+
     }
 }

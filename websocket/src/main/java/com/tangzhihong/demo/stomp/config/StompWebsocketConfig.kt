@@ -11,17 +11,20 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry
  * @date: 2021/6/17 8:06 下午
  * @version: 1.0
  * @group:
+ *
  */
 @Configuration
 @EnableWebSocketMessageBroker
 class StompWebsocketConfig : WebSocketMessageBrokerConfigurer {
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
         //注册一个 Stomp 的节点(endpoint),并指定使用 SockJS 协议。
-        registry.addEndpoint("/endpoint").withSockJS()
+        registry.addEndpoint("/endpoint").setAllowedOrigins("*").withSockJS()
     }
 
     override fun configureMessageBroker(registry: MessageBrokerRegistry) {
         // 广播式配置名为 /nasus 消息代理 , 这个消息代理必须和 controller 中的 @SendTo 配置的地址前缀一样或者全匹配
-        registry.enableSimpleBroker("/nasus")
+        registry.enableSimpleBroker("/topic")
+        //定义前缀 app，用于过滤目标地址，这些地址在 Controller中被 @MessageMapping修饰的方法处理。
+        registry.setApplicationDestinationPrefixes("/app")
     }
 }
